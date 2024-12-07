@@ -88,17 +88,20 @@ loop do
 end
 
 sum = 0
+prev = nil
 
 posible_obstacles.each do |pos|
     visited = {}
     current = start
 
-    new_obstacles = obstacles.clone
-    new_obstacles[pos] = true
+    obstacles.delete(prev) if !prev.nil?
+    obstacles[pos] = true
+    prev = pos
+
     dir = "UP"
 
     loop do
-        if can_move(dir, current, new_obstacles)
+        if can_move(dir, current, obstacles)
             current = move(dir, current)
             if is_out(current, grid)
                 break
