@@ -87,7 +87,7 @@ input.each_with_index do |line, l|
     current_tally = current_line.tally
 
 
-    (robots_cnt).times.each do |i|
+    robots_cnt.times.each do |i|
         new_tally = {}
 
         current_tally.each do |key, value|
@@ -108,3 +108,5 @@ input.each_with_index do |line, l|
 
     sum += current_tally.values.sum * codes_numeric[l]
 end
+
+puts sum
