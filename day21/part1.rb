@@ -337,7 +337,13 @@ robot1.each do |robot_possible|
     #robot2.push(robot_possible_2)
 end
 
+sum = 0
+robot2.each_with_index do |robo, i|
+    sum += robo.first.nil? ? 0 : robo.first.size * codes_numeric[i]
+end
 
+puts sum    
+sum = 0
 # robot 3
 robot3 = []
 

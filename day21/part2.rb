@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
+require 'json'
 
 #+---+---+---+
 #| 7 | 8 | 9 |
@@ -10,130 +11,21 @@
 #+---+---+---+
 #    | 0 | A |
 #    +---+---+
-
-$memo_keypad = {}
+$memo_keypad = {
+    'A': {'A': 'A', '0': '<A', '1': '^<<A', '2': '<^A', '3': '^A', '4': '^^<<A', '5': '<^^A', '6': '^^A', '7': '^^^<<A', '8': '<^^^A', '9': '^^^A'},
+    '0': {'A': '>A', '0': 'A', '1': '^<A', '2': '^A', '3': '^>A', '4': '^^<A', '5': '^^A', '6': '^^>A', '7': '^^^<A', '8': '^^^A', '9': '^^^>A'},
+    '1': {'A': '>>vA', '0': '>vA', '1': 'A', '2': '>A', '3': '>>A', '4': '^A', '5': '^>A', '6': '^>>A', '7': '^^A', '8': '^^>A', '9': '^^>>A'},
+    '2': {'A': 'v>A', '0': 'vA', '1': '<A', '2': 'A', '3': '>A', '4': '<^A', '5': '^A', '6': '^>A', '7': '<^^A', '8': '^^A', '9': '^^>A'},
+    '3': {'A': 'vA', '0': '<vA', '1': '<<A', '2': '<A', '3': 'A', '4': '<<^A', '5': '<^A', '6': '^A', '7': '<<^^A', '8': '<^^A', '9': '^^A'},
+    '4': {'A': '>>vvA', '0': '>vvA', '1': 'vA', '2': 'v>A', '3': 'v>>A', '4': 'A', '5': '>A', '6': '>>A', '7': '^A', '8': '^>A', '9': '^>>A'},
+    '5': {'A': 'vv>A', '0': 'vvA', '1': '<vA', '2': 'vA', '3': 'v>A', '4': '<A', '5': 'A', '6': '>A', '7': '<^A', '8': '^A', '9': '^>A'},
+    '6': {'A': 'vvA', '0': '<vvA', '1': '<<vA', '2': '<vA', '3': 'vA', '4': '<<A', '5': '<A', '6': 'A', '7': '<<^A', '8': '<^A', '9': '^A'},
+    '7': {'A': '>>vvvA', '0': '>vvvA', '1': 'vvA', '2': 'vv>A', '3': 'vv>>A', '4': 'vA', '5': 'v>A', '6': 'v>>A', '7': 'A', '8': '>A', '9': '>>A'},
+    '8': {'A': 'vvv>A', '0': 'vvvA', '1': '<vvA', '2': 'vvA', '3': 'vv>A', '4': '<vA', '5': 'vA', '6': 'v>A', '7': '<A', '8': 'A', '9': '>A'},
+    '9': {'A': 'vvvA', '0': '<vvvA', '1': '<<vvA', '2': '<vvA', '3': 'vvA', '4': '<<vA', '5': '<vA', '6': 'vA', '7': '<<A', '8': '<A', '9': 'A'}
+}
 def keypad_move(char, goal)
-    return $memo_keypad["#{char},#{goal}"] if $memo_keypad.has_key?("#{char},#{goal}")
-    if char == goal
-        moves = [{position: char, move: 'A'}] 
-        $memo_keypad["#{char},#{goal}"] = moves
-        return moves
-    end
-    num = char.to_i(16)
-
-    moves = []
-
-    if goal == 'A'
-        if num > 1 && num < 10
-            move = 'v'
-            position = (num - 3).to_s
-            position = 'A' if char == '3'
-            position = '0' if char == '2'
-            moves.push({position: position, move: move})
-        end
-        
-        if (num % 3 != 0 || num == 0) && char != 'A'
-            move = '>' 
-            position = (num + 1).to_s
-            position = 'A' if num == 0
-            moves.push({position: position, move: move})
-        end
-    end
-
-    if goal == '0'
-        if char == 'A' || num % 3 == 0
-            move = '<'
-            position = (num - 1).to_s
-            position = '0' if char == 'A'
-            moves.push({position: position, move: move})
-        end
-        if num > 1 && num < 10
-            move = 'v' 
-            position = (num - 3).to_s
-            position = 'A' if char == '3'
-            position = '0' if char == '2'
-            moves.push({position: position, move: move})
-        end
-        if num % 3 == 1 && char != 'A'
-            move = '>'
-            position = (num + 1).to_s
-            moves.push({position: position, move: move})
-        end
-    end
-
-    if ['1', '2', '3'].include?(goal)
-        if num == 0 || char == 'A'
-            move = '^'
-            position = '3' if char == 'A'
-            position = '2' if char == '0'
-            moves.push({position: position, move: move})
-        end
-        if num > 3 && num < 10
-            move = 'v'
-            position = (num - 3).to_s
-            moves.push({position: position, move: move})
-        end
-    end
-
-    if ['4', '5', '6'].include?(goal)
-        if char == 'A' || num < 4
-            move = '^'
-            position = (num + 3).to_s
-            position = '3' if char == 'A'
-            position = '2' if char == '0'
-            moves.push({position: position, move: move})
-        end
-        if num > 6 && num < 10
-            move = 'v'
-            position = (num - 3).to_s
-            moves.push({position: position, move: move})
-        end
-    end
-
-    if ['7', '8', '9'].include?(goal)
-        if num < 7 || char == 'A'
-            move = '^'
-            position = (num + 3).to_s
-            position = '3' if char == 'A'
-            position = '2' if char == '0'
-            moves.push({position: position, move: move})
-        end
-    end
-
-    if ['7', '4', '1'].include?(goal)
-        if num != 0 && num != 7 && num != 4 && num != 1
-            move = '<'
-            position = (num -1).to_s
-            position = '0' if char == 'A'
-            moves.push({position: position, move: move})
-        end
-    end
-
-    if ['8', '5', '2'].include?(goal)
-        if (num != 0 && num % 3 == 0) || char == 'A'
-            move = '<'
-            position = (num - 1).to_s
-            position = '0' if char == 'A'
-            moves.push({position: position, move: move})
-        end
-        if num % 3 == 1 && num != 10
-            move = '>'
-            position = (num + 1).to_s
-            moves.push({position: position, move: move})
-        end
-    end
-
-    if ['9', '6', '3'].include?(goal)
-        if num % 3 != 0 && num != 10
-            move = '>'
-            position = (num + 1).to_s
-            position = 'A' if char == '0'
-            moves.push({position: position, move: move})
-        end
-    end
-
-    $memo_keypad["#{char},#{goal}"] = moves
-    return moves
+   return $memo_keypad[char.to_sym][goal.to_sym]
 end
 
 #    +---+---+
@@ -141,230 +33,78 @@ end
 #+---+---+---+
 #| < | v | > |
 #+---+---+---+
-$memo_robot = {}
+#$memo_robot = {
+#        'A'.chars => {'A'.chars => 'A'.chars, '<'.chars => 'v<<A'.chars, '^'.chars => '<A'.chars, '>'.chars => 'vA'.chars, 'v'.chars => '<vA'.chars},
+#        '<'.chars => {'A'.chars => '>>^A'.chars, '<'.chars => 'A'.chars, '^'.chars => '>^A'.chars, '>'.chars => '>>A'.chars, 'v'.chars => '>A'.chars},
+#        '^'.chars => {'A'.chars => '>A'.chars, '<'.chars => 'v<A'.chars, '^'.chars => 'A'.chars, '>'.chars => 'v>A'.chars, 'v'.chars => 'vA'.chars},
+#        '>'.chars => {'A'.chars => '^A'.chars, '<'.chars => '<<A'.chars, '^'.chars => '<^A'.chars, '>'.chars => 'A'.chars, 'v'.chars => '<A'.chars},
+#        'v'.chars => {'A'.chars => '^>A'.chars, '<'.chars => '<A'.chars, '^'.chars => '^A'.chars, '>'.chars => '>A'.chars, 'v'.chars => 'A'.chars}
+#}
+
+#<v<A>>^AvA^A<vA<AA>>^AAvA<^A>AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A
+
+$memo_robot = {
+        'A' => {'A' => 'A', '<' => 'v<<A', '^' => '<A', '>' => 'vA', 'v' => '<vA'},
+        '<' => {'A' => '>>^A', '<' => 'A', '^' => '>^A', '>' => '>>A', 'v' => '>A'},
+        '^' => {'A' => '>A', '<' => 'v<A', '^' => 'A', '>' => 'v>A', 'v' => 'vA'},
+        '>' => {'A' => '^A', '<' => '<<A', '^' => '<^A', '>' => 'A', 'v' => '<A'},
+        'v' => {'A' => '^>A', '<' => '<A', '^' => '^A', '>' => '>A', 'v' => 'A'}
+}
+
 def robot_move(char, goal)
-    return $memo_robot["#{char},#{goal}"] if $memo_robot.has_key?("#{char},#{goal}")
-    if char == goal
-        moves = [{position: char, move: 'A'}]
-        $memo_robot["#{char},#{goal}"] = moves
-        return moves
-    end
-     
-    moves = []
-
-    if goal == '>'
-        if char == 'v'
-            moves.push({position: '>', move: '>'})
-        end
-        if char == '<'
-            moves.push({position: 'v', move: '>'})
-        end
-        if char == '^'
-            moves.push({position: 'A', move: '>'})
-            moves.push({position: 'v', move: 'v'})
-        end
-        if char == 'A'
-            moves.push({position: '>', move: 'v'})
-        end
-    end
-
-    if goal == '<'
-        if char == 'v'
-            moves.push({position: '<', move: '<'})
-        end
-        if char == '>'
-            moves.push({position: 'v', move: '<'})  
-        end
-        if char == '^'
-            moves.push({position: 'v', move: 'v'})
-        end
-        if char == 'A'
-            moves.push({position: '>', move: 'v'})
-            moves.push({position: '^', move: '<'})
-        end
-    end
-
-    if goal == 'v'
-        if char == '<'
-            moves.push({position: 'v', move: '>'})
-        end
-        if char == '>'
-            moves.push({position: 'v', move: '<'})
-        end
-        if char == '^'
-            moves.push({position: 'v', move: 'v'})
-        end
-        if char == 'A'
-            moves.push({position: '>', move: 'v'})
-            moves.push({position: '^', move: '<'})
-        end
-    end
-
-    if goal == '^'
-        if char == '<'
-            moves.push({position: 'v', move: '>'})
-        end
-        if char == '>'
-            moves.push({position: 'v', move: '<'})
-            moves.push({position: 'A', move: '^'})
-        end
-        if char == 'v'
-            moves.push({position: '^', move: '^'})
-        end
-        if char == 'A'
-            moves.push({position: '^', move: '<'})
-        end
-    end
-
-    if goal == 'A'
-        if char == '<'
-            moves.push({position: 'v', move: '>'})
-        end
-        if char == '>'
-            moves.push({position: 'A', move: '^'})
-        end
-        if char == '^'
-            moves.push({position: 'A', move: '>'})
-        end
-        if char == 'v'
-            moves.push({position: '^', move: '^'})
-            moves.push({position: '>', move: '>'})
-        end
-    end
-
-    $memo_robot["#{char},#{goal}"] = moves
-    return moves
+    return $memo_robot[char][goal]
 end
 
 file_path = File.expand_path('input.txt', __dir__)
 input = File.read(file_path).split("\n").map { |line| line.chars }
 
-
 codes_numeric = input.map { |line| line.take(3).join.to_i }
 
-
-
-robot1 = []
-# robot 1
-input.each do |line|
-    current = 'A'
-    candidates = [ last: current, size: 0, moves:[]]
-    line.each do |char|
-        moves_left = true
-        
-        final_candidates = []
-        while moves_left
-            moves_left = false
-            new_candidates = []
-
-            candidates.each do |candidate|
-                last = candidate[:last]
-       
-                if last == char.to_s
-                    candidate[:size] += 1
-                    candidate[:moves].push('A')
-                    final_candidates.push(candidate)
-                    next
-                end
-                moves = keypad_move(last, char.to_s)
-                moves.each do |move|
-                    new_moves = candidate[:moves].dup
-                    new_moves.push(move[:move])
-                    new_size = candidate[:size] + 1
-                    new_candidates.push({ last: move[:position], moves: new_moves, size: new_size })  
-                    moves_left = true
-                end
-   
-            end
-            candidates = new_candidates
-        end
-
-        candidates = final_candidates
-    end
-
-    min_size = candidates.map { |candidate| candidate[:size] }.min
-    robot1.push(candidates.select{ |candidate| candidate[:size] == min_size }.map { |candidate| candidate[:moves] })
-end
-
-
-robot1.each do |robo|
-    robo.each do |robo_moves|
-        puts robo_moves.join
-    end
-    puts
-end
-
-robot2 = []
-robot_loops = 2
-
-
-robot_loops.times do |cycle|
-    puts cycle + 1
-    robot1.each do |robot_possible|
-        min = -1
-        robot_possible_2 = []
-        best_candidates = []
-        robot_possible.each do |robot_moves|
-
-            current = 'A'
-            candidates = [ last: current, size: 0, moves:[]]
-            cache_hit = false
-            robot_moves.each do |char|
-                
-                moves_left = true
-                final_candidates = []
-                while moves_left
-                    
-                    moves_left = false
-                    new_candidates = []
-
-                    candidates.each do |candidate|
-                        last = candidate[:last]
-                
-                        if last == char
-                            candidate[:size] += 1
-                            candidate[:moves].push('A')
-                            final_candidates.push(candidate)
-                            next
-                        end
-                        moves = robot_move(last, char)
-                        moves.each do |move|
-                            new_moves = candidate[:moves].dup
-                            new_moves.push(move[:move])
-                            new_size = candidate[:size] + 1
-                            new_candidates.push({ last: move[:position], moves: new_moves, size: new_size })  
-                            moves_left = true
-                        end
-            
-                    end
-                    candidates = new_candidates
-        
-                end
-
-                candidates = final_candidates
-            end
-
-            robot_possible_2.push(candidates.map { |candidate| candidate[:moves] }) 
-        end
-        
-        robot_shortest = robot_possible_2.flatten(1)
-        min_robo = robot_shortest.map(&:size).min
-        robot2.push(robot_shortest.select { |robo| robo.size == min_robo })
-    end
-
-
-
-    if cycle < robot_loops - 1
-        robot1 = robot2
-        robot2 = []
-    end
-end
-
-
+robots_cnt = 25
+codes_cnt = input.size
 
 sum = 0
-robot2.each_with_index do |robo, i|
-    sum += robo.first.size * codes_numeric[i]
-end
+input.each_with_index do |line, l|
 
-puts sum
+    current_line = line
+  
+    2.times do |i|
+        new_line = []
+        prev_char = "A"
+        (0..current_line.size-1).each do |j|
+            char = current_line[j]
+            if i == 0
+                new_line.push(*keypad_move(prev_char, char).chars)
+            else
+                new_line.push(*robot_move(prev_char, char))
+            end
+            prev_char = char 
+        end
+
+        current_line = new_line
+    end
+
+    current_tally = current_line.tally
+
+
+    (robots_cnt).times.each do |i|
+        new_tally = {}
+
+        current_tally.each do |key, value|
+            chars = key.chars
+            
+            prev_char = "A"
+            chars.each_with_index do |char, j|
+                new_move = robot_move(prev_char, char)
+                new_tally[new_move] = 0 if new_tally[new_move].nil?
+                new_tally[new_move] += value
+                prev_char = char
+            end
+        end
+
+        
+        current_tally = new_tally
+    end
+
+    sum += current_tally.values.sum * codes_numeric[l]
+end
