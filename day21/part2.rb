@@ -14,7 +14,11 @@
 $memo_keypad = {}
 def keypad_move(char, goal)
     return $memo_keypad["#{char},#{goal}"] if $memo_keypad.has_key?("#{char},#{goal}")
-    return [{position: char, move: 'A'}] if char == goal
+    if char == goal
+        moves = [{position: char, move: 'A'}] 
+        $memo_keypad["#{char},#{goal}"] = moves
+        return moves
+    end
     num = char.to_i(16)
 
     moves = []
@@ -140,7 +144,11 @@ end
 $memo_robot = {}
 def robot_move(char, goal)
     return $memo_robot["#{char},#{goal}"] if $memo_robot.has_key?("#{char},#{goal}")
-    return [{position: char, move: 'A'}] if char == goal
+    if char == goal
+        moves = [{position: char, move: 'A'}]
+        $memo_robot["#{char},#{goal}"] = moves
+        return moves
+    end
      
     moves = []
 
@@ -278,21 +286,32 @@ input.each do |line|
     robot1.push(candidates.select{ |candidate| candidate[:size] == min_size }.map { |candidate| candidate[:moves] })
 end
 
-#robot1.first.each { |robo| puts robo.join }
 
-#exit
+robot1.each do |robo|
+    robo.each do |robo_moves|
+        puts robo_moves.join
+    end
+    puts
+end
+
 robot2 = []
 robot_loops = 2
 
+
 robot_loops.times do |cycle|
+    puts cycle + 1
     robot1.each do |robot_possible|
+        min = -1
         robot_possible_2 = []
+        best_candidates = []
         robot_possible.each do |robot_moves|
+
             current = 'A'
             candidates = [ last: current, size: 0, moves:[]]
+            cache_hit = false
             robot_moves.each do |char|
-                moves_left = true
                 
+                moves_left = true
                 final_candidates = []
                 while moves_left
                     
@@ -323,26 +342,17 @@ robot_loops.times do |cycle|
                 end
 
                 candidates = final_candidates
-                
             end
 
-            min_size = candidates.map { |candidate| candidate[:size] }.min
-
-            robot_possible_2.push(candidates.select{ |candidate| candidate[:size] == min_size }.map { |candidate| candidate[:moves] }) 
-        
+            robot_possible_2.push(candidates.map { |candidate| candidate[:moves] }) 
         end
         
-        robot_shortest = []
-        robot_possible_2.each do |robos|
-        robos.each do |robo|
-                robot_shortest.push(robo)
-        end
-        end
-
-        min_robo = robot_shortest.map { |robo| robo.size }.min
+        robot_shortest = robot_possible_2.flatten(1)
+        min_robo = robot_shortest.map(&:size).min
         robot2.push(robot_shortest.select { |robo| robo.size == min_robo })
-        #robot2.push(robot_possible_2)
     end
+
+
 
     if cycle < robot_loops - 1
         robot1 = robot2
@@ -352,11 +362,9 @@ end
 
 
 
-
-
 sum = 0
 robot2.each_with_index do |robo, i|
-    sum += robo.first.nil? ? 0 : robo.first.size * codes_numeric[i]
+    sum += robo.first.size * codes_numeric[i]
 end
 
 puts sum
